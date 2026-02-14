@@ -46,6 +46,13 @@ button{
     border-radius:10px;
     width:95%;
 }
+.total-box{
+    background:#111827;
+    padding:10px;
+    margin:10px;
+    border-radius:10px;
+    font-weight:bold;
+}
 </style>
 </head>
 
@@ -53,14 +60,18 @@ button{
 
 <div class="header">إدارة حجوزات القاعات</div>
 
+<div class="total-box">
+إجمالي المتبقي: <span id="totalRemaining">0</span>
+</div>
+
 <div class="container">
 
 <select id="hall">
 <option value="">اختر القاعة</option>
-<option>القاعة 1</option>
-<option>القاعة 2</option>
-<option>القاعة 3</option>
-<option>القاعة 4</option>
+<option>قاعة كابيتال</option>
+<option>قاعة برادايس</option>
+<option>قاعة سكاي</option>
+<option>قاعة الماسة</option>
 </select>
 
 <input type="date" id="date">
@@ -78,6 +89,11 @@ button{
 
 <button onclick="addBooking()">إضافة / تعديل حجز</button>
 
+<hr>
+
+<input type="date" id="filterDate" onchange="displayBookings()" placeholder="فلترة بالتاريخ">
+<input type="text" id="searchName" onkeyup="displayBookings()" placeholder="بحث باسم العميل">
+
 <div id="bookings"></div>
 
 </div>
@@ -94,8 +110,8 @@ function addBooking(){
     let period = document.getElementById("period").value;
     let name = document.getElementById("name").value;
     let phone = document.getElementById("phone").value;
-    let total = document.getElementById("total").value;
-    let paid = document.getElementById("paid").value;
+    let total = Number(document.getElementById("total").value);
+    let paid = Number(document.getElementById("paid").value);
     let remaining = total - paid;
 
     if(!hall || !date || !period || !name){
@@ -130,9 +146,23 @@ function addBooking(){
 }
 
 function displayBookings(){
+
     let container=document.getElementById("bookings");
     container.innerHTML="";
-    bookings.forEach((b,index)=>{
+
+    let filterDate=document.getElementById("filterDate").value;
+    let searchName=document.getElementById("searchName").value.toLowerCase();
+
+    let filtered=bookings.filter(b=>{
+        let matchDate=!filterDate || b.date===filterDate;
+        let matchName=!searchName || b.name.toLowerCase().includes(searchName);
+        return matchDate && matchName;
+    });
+
+    let totalRemaining=0;
+
+    filtered.forEach((b,index)=>{
+        totalRemaining+=b.remaining;
         container.innerHTML+=`
         <div class="card">
             <p>القاعة: ${b.hall}</p>
@@ -145,6 +175,8 @@ function displayBookings(){
         </div>
         `;
     });
+
+    document.getElementById("totalRemaining").innerText=totalRemaining;
 }
 
 function editBooking(index){
@@ -183,4 +215,3 @@ displayBookings();
 
 </body>
 </html>
-```
