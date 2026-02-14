@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>إدارة حجوزات القاعات</title>
 
 <style>
-body{font-family:Arial;background:#0f172a;color:white;text-align:center;margin:0}
+body{font-family:Arial;background:#0f172a;color:#fff;text-align:center;margin:0}
 .header{background:#1e293b;padding:15px;font-size:20px;font-weight:bold}
 .container{padding:15px}
 input,select{width:90%;padding:10px;margin:5px 0;border-radius:8px;border:none}
-button{padding:9px 16px;background:#2563eb;border:none;color:white;border-radius:8px;margin:6px 4px}
+button{padding:9px 16px;background:#2563eb;border:none;color:#fff;border-radius:8px;margin:6px 4px}
 .secondary{background:#334155}
 .delete{background:#dc2626}
 .edit{background:#f59e0b}
@@ -33,6 +33,7 @@ hr{border:0;border-top:1px solid #334155;margin:14px 0}
 .mini.booked-pm{background:#7c3aed}
 .mini.booked-both{background:#dc2626}
 
+/* Modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;justify-content:center;align-items:center;padding:14px}
 .modal .box{background:#0b1220;border:1px solid #1f2937;width:100%;max-width:520px;border-radius:14px;padding:12px;text-align:right;max-height:80vh;overflow:auto}
 .modal .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -45,7 +46,6 @@ hr{border:0;border-top:1px solid #334155;margin:14px 0}
 </head>
 
 <body>
-
 <div class="header">إدارة حجوزات القاعات</div>
 
 <div class="total-box">
@@ -53,8 +53,8 @@ hr{border:0;border-top:1px solid #334155;margin:14px 0}
 </div>
 
 <div class="container">
-  <button onclick="showList()" id="btnList">قائمة الحجوزات</button>
-  <button class="secondary" onclick="showCalendar()" id="btnCal">التقويم</button>
+  <button onclick="showList()">قائمة الحجوزات</button>
+  <button class="secondary" onclick="showCalendar()">التقويم</button>
 </div>
 
 <div class="container" id="listView">
@@ -67,7 +67,7 @@ hr{border:0;border-top:1px solid #334155;margin:14px 0}
     <option>قاعة الماسة</option>
   </select>
 
-  <input type="date" id="date">
+  <input type="date" id="date" />
 
   <select id="period">
     <option value="">اختر الفترة</option>
@@ -75,27 +75,26 @@ hr{border:0;border-top:1px solid #334155;margin:14px 0}
     <option>مسائية</option>
   </select>
 
-  <input type="text" id="name" placeholder="اسم العميل">
-  <input type="text" id="phone" placeholder="رقم الهاتف">
-  <input type="number" id="total" placeholder="قيمة الحجز">
-  <input type="number" id="paid" placeholder="العربون">
+  <input type="text" id="name" placeholder="اسم العميل" />
+  <input type="text" id="phone" placeholder="رقم الهاتف" />
+  <input type="number" id="total" placeholder="قيمة الحجز" />
+  <input type="number" id="paid" placeholder="العربون" />
 
   <button onclick="addBooking()">إضافة / تعديل حجز</button>
 
-  <hr>
+  <hr />
 
-  <input type="date" id="filterDate" onchange="displayBookings()">
-  <input type="text" id="searchName" onkeyup="displayBookings()" placeholder="بحث باسم العميل">
+  <input type="date" id="filterDate" onchange="displayBookings()" />
+  <input type="text" id="searchName" onkeyup="displayBookings()" placeholder="بحث باسم العميل" />
 
   <div id="bookings"></div>
 </div>
 
 <div class="container hidden" id="calendarView">
-
   <div class="calendar-controls">
     <select id="calMonth"></select>
     <select id="calYear"></select>
-    <button class="secondary" onclick="forceRender()">عرض</button>
+    <button class="secondary" onclick="renderCalendar(true)">عرض</button>
   </div>
 
   <div class="calendar-grid" id="weekdays"></div>
@@ -124,89 +123,21 @@ function showList(){
   document.getElementById("listView").classList.remove("hidden");
   document.getElementById("calendarView").classList.add("hidden");
 }
+
 function showCalendar(){
   document.getElementById("calendarView").classList.remove("hidden");
   document.getElementById("listView").classList.add("hidden");
-  renderCalendar();
+  renderCalendar(true);
 }
-function forceRender(){ renderCalendar(true); }
 
 function addBooking(){
-  let hall=document.getElementById("hall").value;
-  let date=document.getElementById("date").value;
-  let period=document.getElementById("period").value;
-  let name=document.getElementById("name").value;
-  let phone=document.getElementById("phone").value;
-  let total=Number(document.getElementById("total").value);
-  let paid=Number(document.getElementById("paid").value);
-  let remaining=total-paid;
+  const hall = document.getElementById("hall").value;
+  const date = document.getElementById("date").value;
+  const period = document.getElementById("period").value;
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const total = Number(document.getElementById("total").value);
+  const paid = Number(document.getElementById("paid").value);
+  const remaining = total - paid;
 
-  if(!hall||!date||!period||!name){ alert("يرجى إدخال جميع البيانات"); return; }
-
-  let exists=bookings.some((b,index)=>b.hall===hall&&b.date===date&&b.period===period&&index!==editIndex);
-  if(exists){ alert("هذه القاعة محجوزة بالفعل في نفس التاريخ والفترة"); return; }
-
-  let booking={hall,date,period,name,phone,total,paid,remaining};
-
-  if(editIndex!==null){ bookings[editIndex]=booking; editIndex=null; }
-  else{ bookings.push(booking); }
-
-  localStorage.setItem("bookings",JSON.stringify(bookings));
-  clearForm();
-  displayBookings();
-  renderCalendar(false);
-}
-
-function displayBookings(){
-  let container=document.getElementById("bookings");
-  container.innerHTML="";
-  let filterDate=document.getElementById("filterDate").value;
-  let searchName=(document.getElementById("searchName").value||"").toLowerCase();
-
-  let filtered=bookings.filter(b=>{
-    let matchDate=!filterDate||b.date===filterDate;
-    let matchName=!searchName||(b.name||"").toLowerCase().includes(searchName);
-    return matchDate&&matchName;
-  });
-
-  let totalRemaining=0;
-
-  filtered.forEach((b,viewIndex)=>{
-    totalRemaining+=Number(b.remaining)||0;
-    let realIndex=bookings.findIndex(x=>x.hall===b.hall&&x.date===b.date&&x.period===b.period&&x.name===b.name&&x.phone===b.phone&&x.total===b.total&&x.paid===b.paid);
-    if(realIndex===-1) realIndex=viewIndex;
-
-    container.innerHTML+=`
-      <div class="card">
-        <div><span class="badge">${b.hall}</span><span class="badge ${b.period==='صباحية'?'am':'pm'}">${b.period}</span></div>
-        <div class="small">التاريخ: ${b.date}</div>
-        <div style="margin-top:6px;">العميل: ${b.name}</div>
-        <div class="small">الهاتف: ${b.phone||'-'}</div>
-        <div style="margin-top:6px;">المتبقي: ${b.remaining}</div>
-        <button class="edit" onclick="editBooking(${realIndex})">تعديل</button>
-        <button class="delete" onclick="deleteBooking(${realIndex})">حذف</button>
-      </div>
-    `;
-  });
-
-  document.getElementById("totalRemaining").innerText=totalRemaining;
-}
-
-function editBooking(index){
-  let b=bookings[index]; if(!b) return;
-  document.getElementById("hall").value=b.hall;
-  document.getElementById("date").value=b.date;
-  document.getElementById("period").value=b.period;
-  document.getElementById("name").value=b.name;
-  document.getElementById("phone").value=b.phone;
-  document.getElementById("total").value=b.total;
-  document.getElementById("paid").value=b.paid;
-  editIndex=index;
-  showList();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function deleteBooking(index){
-  if(confirm("هل أنت متأكد من الحذف؟")){
-    bookings.splice(index,1);
-    localStorage.setItem("bookings",JSON.stringify
+  if(!hall || !date || !
