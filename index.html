@@ -4,47 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>إدارة حجوزات القاعات</title>
+
 <style>
-body {
+body{
     font-family: Arial;
-    background: #0f172a;
-    color: white;
-    text-align: center;
-    margin: 0;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+    margin:0;
 }
-.header {
-    background: #1e293b;
-    padding: 15px;
-    font-size: 20px;
-    font-weight: bold;
+.header{
+    background:#1e293b;
+    padding:15px;
+    font-size:20px;
+    font-weight:bold;
 }
-.container {
-    padding: 15px;
+.container{
+    padding:15px;
 }
-input, select {
-    width: 90%;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 8px;
-    border: none;
+input,select{
+    width:90%;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+    border:none;
 }
-button {
-    padding: 10px 20px;
-    background: #2563eb;
-    border: none;
-    color: white;
-    border-radius: 8px;
-    margin-top: 10px;
+button{
+    padding:8px 15px;
+    background:#2563eb;
+    border:none;
+    color:white;
+    border-radius:8px;
+    margin:5px;
 }
-.card {
-    background: #1e293b;
-    padding: 10px;
-    margin: 10px auto;
-    border-radius: 10px;
-    width: 90%;
+.delete{background:#dc2626;}
+.edit{background:#f59e0b;}
+.card{
+    background:#1e293b;
+    padding:10px;
+    margin:10px auto;
+    border-radius:10px;
+    width:95%;
 }
 </style>
 </head>
+
 <body>
 
 <div class="header">إدارة حجوزات القاعات</div>
@@ -59,58 +63,124 @@ button {
 <option>القاعة 4</option>
 </select>
 
+<input type="date" id="date">
+
+<select id="period">
+<option value="">اختر الفترة</option>
+<option>صباحية</option>
+<option>مسائية</option>
+</select>
+
 <input type="text" id="name" placeholder="اسم العميل">
 <input type="text" id="phone" placeholder="رقم الهاتف">
 <input type="number" id="total" placeholder="قيمة الحجز">
 <input type="number" id="paid" placeholder="العربون">
 
-<button onclick="addBooking()">إضافة حجز</button>
+<button onclick="addBooking()">إضافة / تعديل حجز</button>
 
 <div id="bookings"></div>
 
 </div>
 
 <script>
-let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
 
-function addBooking() {
+let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+let editIndex = null;
+
+function addBooking(){
+
     let hall = document.getElementById("hall").value;
+    let date = document.getElementById("date").value;
+    let period = document.getElementById("period").value;
     let name = document.getElementById("name").value;
     let phone = document.getElementById("phone").value;
     let total = document.getElementById("total").value;
     let paid = document.getElementById("paid").value;
     let remaining = total - paid;
 
-    if (!hall || !name) {
-        alert("يرجى إدخال البيانات");
+    if(!hall || !date || !period || !name){
+        alert("يرجى إدخال جميع البيانات");
         return;
     }
 
-    let booking = { hall, name, phone, total, paid, remaining };
-    bookings.push(booking);
-    localStorage.setItem("bookings", JSON.stringify(bookings));
+    let exists = bookings.some((b,index)=>
+        b.hall===hall &&
+        b.date===date &&
+        b.period===period &&
+        index!==editIndex
+    );
 
+    if(exists){
+        alert("هذه القاعة محجوزة بالفعل في نفس التاريخ والفترة");
+        return;
+    }
+
+    let booking = {hall,date,period,name,phone,total,paid,remaining};
+
+    if(editIndex!==null){
+        bookings[editIndex]=booking;
+        editIndex=null;
+    }else{
+        bookings.push(booking);
+    }
+
+    localStorage.setItem("bookings",JSON.stringify(bookings));
+    clearForm();
     displayBookings();
 }
 
-function displayBookings() {
-    let container = document.getElementById("bookings");
-    container.innerHTML = "";
-    bookings.forEach(b => {
-        container.innerHTML += `
+function displayBookings(){
+    let container=document.getElementById("bookings");
+    container.innerHTML="";
+    bookings.forEach((b,index)=>{
+        container.innerHTML+=`
         <div class="card">
             <p>القاعة: ${b.hall}</p>
+            <p>التاريخ: ${b.date}</p>
+            <p>الفترة: ${b.period}</p>
             <p>العميل: ${b.name}</p>
-            <p>الهاتف: ${b.phone}</p>
-            <p>الإجمالي: ${b.total}</p>
-            <p>المدفوع: ${b.paid}</p>
             <p>المتبقي: ${b.remaining}</p>
-        </div>`;
+            <button class="edit" onclick="editBooking(${index})">تعديل</button>
+            <button class="delete" onclick="deleteBooking(${index})">حذف</button>
+        </div>
+        `;
     });
 }
 
+function editBooking(index){
+    let b=bookings[index];
+    document.getElementById("hall").value=b.hall;
+    document.getElementById("date").value=b.date;
+    document.getElementById("period").value=b.period;
+    document.getElementById("name").value=b.name;
+    document.getElementById("phone").value=b.phone;
+    document.getElementById("total").value=b.total;
+    document.getElementById("paid").value=b.paid;
+    editIndex=index;
+}
+
+function deleteBooking(index){
+    if(confirm("هل أنت متأكد من الحذف؟")){
+        bookings.splice(index,1);
+        localStorage.setItem("bookings",JSON.stringify(bookings));
+        displayBookings();
+    }
+}
+
+function clearForm(){
+    document.getElementById("hall").value="";
+    document.getElementById("date").value="";
+    document.getElementById("period").value="";
+    document.getElementById("name").value="";
+    document.getElementById("phone").value="";
+    document.getElementById("total").value="";
+    document.getElementById("paid").value="";
+}
+
 displayBookings();
+
 </script>
 
 </body>
 </html>
+```
