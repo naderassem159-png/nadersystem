@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة حجوزات القاعات</title>
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+    margin: 0;
+}
+.header {
+    background: #1e293b;
+    padding: 15px;
+    font-size: 20px;
+    font-weight: bold;
+}
+.container {
+    padding: 15px;
+}
+input, select {
+    width: 90%;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+    border: none;
+}
+button {
+    padding: 10px 20px;
+    background: #2563eb;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+.card {
+    background: #1e293b;
+    padding: 10px;
+    margin: 10px auto;
+    border-radius: 10px;
+    width: 90%;
+}
+</style>
+</head>
+<body>
+
+<div class="header">إدارة حجوزات القاعات</div>
+
+<div class="container">
+
+<select id="hall">
+<option value="">اختر القاعة</option>
+<option>القاعة 1</option>
+<option>القاعة 2</option>
+<option>القاعة 3</option>
+<option>القاعة 4</option>
+</select>
+
+<input type="text" id="name" placeholder="اسم العميل">
+<input type="text" id="phone" placeholder="رقم الهاتف">
+<input type="number" id="total" placeholder="قيمة الحجز">
+<input type="number" id="paid" placeholder="العربون">
+
+<button onclick="addBooking()">إضافة حجز</button>
+
+<div id="bookings"></div>
+
+</div>
+
+<script>
+let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+
+function addBooking() {
+    let hall = document.getElementById("hall").value;
+    let name = document.getElementById("name").value;
+    let phone = document.getElementById("phone").value;
+    let total = document.getElementById("total").value;
+    let paid = document.getElementById("paid").value;
+    let remaining = total - paid;
+
+    if (!hall || !name) {
+        alert("يرجى إدخال البيانات");
+        return;
+    }
+
+    let booking = { hall, name, phone, total, paid, remaining };
+    bookings.push(booking);
+    localStorage.setItem("bookings", JSON.stringify(bookings));
+
+    displayBookings();
+}
+
+function displayBookings() {
+    let container = document.getElementById("bookings");
+    container.innerHTML = "";
+    bookings.forEach(b => {
+        container.innerHTML += `
+        <div class="card">
+            <p>القاعة: ${b.hall}</p>
+            <p>العميل: ${b.name}</p>
+            <p>الهاتف: ${b.phone}</p>
+            <p>الإجمالي: ${b.total}</p>
+            <p>المدفوع: ${b.paid}</p>
+            <p>المتبقي: ${b.remaining}</p>
+        </div>`;
+    });
+}
+
+displayBookings();
+</script>
+
+</body>
+</html>
