@@ -1,143 +1,2057 @@
-<!DOCTYPE html>
-<html lang="ar">
+----- PART 1/2 START -----
+<!doctype html>
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>إدارة حجوزات القاعات</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>نظام إدارة القاعات والمطعم</title>
+  <style>
+    :root{
+      --bg:#0c1526;
+      --card:#0f223d;
+      --card2:#102745;
+      --text:#f3f6ff;
+      --muted:#b9c6e6;
+      --brand:#2f6bff;
+      --brand2:#18bfa6;
+      --danger:#ff4d4d;
+      --warn:#ffb020;
+      --ok:#2bd972;
+      --line: rgba(255,255,255,.10);
+      --shadow: 0 14px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+      --radius2: 12px;
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Kufi Arabic", "Noto Sans Arabic", "Cairo", sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1200px 600px at 50% -10%, #1b3a6e 0%, var(--bg) 55%) fixed;
+      color:var(--text);
+    }
+    a{color:inherit}
+    .app{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 40px;
+    }
+    .topbar{
+      position: sticky; top: 0;
+      z-index: 50;
+      background: linear-gradient(to bottom, rgba(12,21,38,.92), rgba(12,21,38,.68));
+      backdrop-filter: blur(10px);
+      padding: 14px 10px 10px;
+      border-bottom: 1px solid var(--line);
+      margin: -18px -14px 16px;
+    }
+    .title{
+      font-size: 22px;
+      font-weight: 800;
+      text-align:center;
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      text-align:center;
+      color:var(--muted);
+      font-size: 12.5px;
+      margin-top:6px;
+    }
 
-<style>
-body{font-family:Arial;background:#0f172a;color:#fff;text-align:center;margin:0}
-.header{background:#1e293b;padding:15px;font-size:20px;font-weight:bold}
-.container{padding:15px}
-input,select{width:90%;padding:10px;margin:5px 0;border-radius:8px;border:none}
-button{padding:9px 16px;background:#2563eb;border:none;color:#fff;border-radius:8px;margin:6px 4px}
-.secondary{background:#334155}
-.delete{background:#dc2626}
-.edit{background:#f59e0b}
-.card{background:#1e293b;padding:10px;margin:10px auto;border-radius:10px;width:95%;text-align:right}
-.total-box{background:#111827;padding:10px;margin:10px;border-radius:10px;font-weight:bold}
-hr{border:0;border-top:1px solid #334155;margin:14px 0}
-.hidden{display:none}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width:720px){
+      .grid{grid-template-columns: 1fr 1fr}
+      .grid.grid3{grid-template-columns: 1fr 1fr 1fr}
+    }
 
-/* Calendar */
-.calendar-controls{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0}
-.calendar-controls select{width:auto;min-width:140px}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:10px 5px}
-.weekday{font-size:12px;opacity:.85;padding:6px 0}
-.day{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:8px 6px;min-height:92px;cursor:pointer}
-.day .num{font-weight:bold;font-size:14px;text-align:left;opacity:.95}
-.halls-mini{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:6px}
-.mini{border-radius:7px;padding:5px 4px;font-size:11px;background:#1f2937;border:1px solid #243244;text-align:center}
-.mini.free{background:#1f2937}
-.mini.booked-am{background:#2563eb}
-.mini.booked-pm{background:#7c3aed}
-.mini.booked-both{background:#dc2626}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card .hd h3{
+      margin:0;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .badge{
+      font-size: 11px;
+      color: var(--muted);
+      border:1px solid var(--line);
+      padding:6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card .bd{padding: 14px}
 
-/* Modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;justify-content:center;align-items:center;padding:14px}
-.modal .box{background:#0b1220;border:1px solid #1f2937;width:100%;max-width:520px;border-radius:14px;padding:12px;text-align:right;max-height:80vh;overflow:auto}
-.modal .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.modal .close{background:#334155}
-.small{font-size:12px;opacity:.85}
-.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;margin-left:6px;background:#334155}
-.badge.am{background:#2563eb}
-.badge.pm{background:#7c3aed}
-</style>
+    .btn{
+      appearance:none;
+      border:0;
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-weight:800;
+      cursor:pointer;
+      background: var(--brand);
+      color: white;
+      box-shadow: 0 10px 22px rgba(47,107,255,.25);
+      transition: transform .08s ease, filter .2s ease;
+      width: 100%;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.secondary{
+      background: rgba(255,255,255,.07);
+      box-shadow:none;
+      border:1px solid var(--line);
+      color: var(--text);
+    }
+    .btn.ok{background: var(--brand2); box-shadow: 0 10px 22px rgba(24,191,166,.20)}
+    .btn.warn{background: var(--warn); color:#111; box-shadow: 0 10px 22px rgba(255,176,32,.18)}
+    .btn.danger{background: var(--danger); box-shadow: 0 10px 22px rgba(255,77,77,.18)}
+    .btn.inline{width:auto; padding:10px 12px; border-radius: 11px}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .row .btn{flex:1}
+
+    .section{
+      display:none;
+      animation: fade .18s ease;
+    }
+    .section.active{display:block}
+    @keyframes fade{from{opacity:.55; transform: translateY(2px)} to{opacity:1; transform:none}}
+
+    .menuCard{
+      padding: 16px;
+      text-align:center;
+    }
+    .menuCard h2{
+      margin: 4px 0 10px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .menuCard p{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .form{
+      display:grid;
+      gap: 10px;
+    }
+    .field{
+      display:grid;
+      gap: 7px;
+    }
+    .field label{
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    input, select, textarea{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline:none;
+    }
+    input::placeholder, textarea::placeholder{color: rgba(243,246,255,.45)}
+    textarea{min-height: 92px; resize: vertical}
+
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+
+    .tableWrap{
+      overflow:auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(0,0,0,.16);
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+    th, td{
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    th{
+      position: sticky; top: 0;
+      background: rgba(12,21,38,.9);
+      color: var(--muted);
+      font-weight: 800;
+      z-index: 2;
+    }
+    tr:last-child td{border-bottom:0}
+    .pill{
+      display:inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .pill.ok{color:#07140d; background: rgba(43,217,114,.85); border-color: rgba(43,217,114,.3)}
+    .pill.warn{color:#1a1200; background: rgba(255,176,32,.9); border-color: rgba(255,176,32,.35)}
+    .pill.danger{color:#190808; background: rgba(255,77,77,.9); border-color: rgba(255,77,77,.35)}
+    .muted{color: var(--muted)}
+    .kpi{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (min-width:720px){
+      .kpi{grid-template-columns: 1fr 1fr 1fr 1fr}
+    }
+    .kpi .box{
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,.04);
+    }
+    .kpi .num{
+      font-size: 16px;
+      font-weight: 900;
+      margin-top: 6px;
+    }
+
+    .calControls{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:flex-end;
+    }
+    .calControls .field{flex:1; min-width: 150px}
+    .calendar{
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow:hidden;
+      background: rgba(0,0,0,.16);
+    }
+    .calHeader{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:0;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    .calHeader div{
+      padding: 10px 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 900;
+      text-align:center;
+    }
+    .calGrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .day{
+      min-height: 86px;
+      border-left: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      cursor:pointer;
+      position: relative;
+      background: transparent;
+    }
+    .day:nth-child(7n){border-left:0}
+    .day.empty{cursor:default; opacity:.35}
+    .day .dnum{
+      font-weight: 900;
+      font-size: 13px;
+      text-align:left;
+      direction:ltr;
+      opacity:.95;
+    }
+    .day .mini{
+      margin-top: 6px;
+      display:flex; flex-wrap:wrap;
+      gap:6px;
+    }
+    .day.booked{background: rgba(47,107,255,.12)}
+    .day.partial{background: rgba(255,176,32,.10)}
+    .day .dot{
+      width: 9px; height: 9px;
+      border-radius: 99px;
+      background: rgba(255,255,255,.25);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .day .dot.b{background: rgba(47,107,255,.92); border-color: rgba(47,107,255,.35)}
+    .day .dot.p{background: rgba(255,176,32,.92); border-color: rgba(255,176,32,.35)}
+    .day .dot.g{background: rgba(43,217,114,.92); border-color: rgba(43,217,114,.35)}
+    .modalBack{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.62);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modalBack.show{display:flex}
+    .modal{
+      width:min(860px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal .hd{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .modal .hd h3{margin:0; font-size: 15px; font-weight: 900}
+    .modal .bd{padding: 14px}
+    .xbtn{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 11px;
+      cursor:pointer;
+      font-weight: 900;
+    }
+
+    .toast{
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      z-index: 200;
+      display:none;
+    }
+    .toast.show{display:block}
+    .toast .box{
+      max-width: 980px;
+      margin: 0 auto;
+      border:1px solid var(--line);
+      background: rgba(10,18,33,.92);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .toast .box .msg{font-size: 13px; line-height: 1.5}
+    .small{font-size: 12px; color: var(--muted)}
+    .sep{height: 1px; background: var(--line); margin: 12px 0}
+
+    .switchRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+    }
+    .switchRow b{font-size: 13px}
+    .switchRow span{color: var(--muted); font-size: 12px}
+    .toggle{
+      width: 52px;
+      height: 30px;
+      background: rgba(255,255,255,.10);
+      border:1px solid var(--line);
+      border-radius: 999px;
+      position: relative;
+      cursor:pointer;
+      flex: 0 0 auto;
+    }
+    .toggle::after{
+      content:"";
+      width: 24px; height: 24px;
+      background: rgba(255,255,255,.92);
+      border-radius: 99px;
+      position:absolute;
+      top: 2px; right: 2px;
+      transition: .18s ease;
+    }
+    .toggle.on{background: rgba(24,191,166,.22); border-color: rgba(24,191,166,.25)}
+    .toggle.on::after{right: 26px; background: rgba(24,191,166,.95)}
+
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+  </style>
 </head>
-
 <body>
-<div class="header">إدارة حجوزات القاعات</div>
-
-<div class="total-box">
-إجمالي المتبقي: <span id="totalRemaining">0</span>
-</div>
-
-<div class="container">
-  <button onclick="showList()">قائمة الحجوزات</button>
-  <button class="secondary" onclick="showCalendar()">التقويم</button>
-</div>
-
-<div class="container" id="listView">
-
-  <select id="hall">
-    <option value="">اختر القاعة</option>
-    <option>قاعة كابيتال</option>
-    <option>قاعة برادايس</option>
-    <option>قاعة سكاي</option>
-    <option>قاعة الماسة</option>
-  </select>
-
-  <input type="date" id="date" />
-
-  <select id="period">
-    <option value="">اختر الفترة</option>
-    <option>صباحية</option>
-    <option>مسائية</option>
-  </select>
-
-  <input type="text" id="name" placeholder="اسم العميل" />
-  <input type="text" id="phone" placeholder="رقم الهاتف" />
-  <input type="number" id="total" placeholder="قيمة الحجز" />
-  <input type="number" id="paid" placeholder="العربون" />
-
-  <button onclick="addBooking()">إضافة / تعديل حجز</button>
-
-  <hr />
-
-  <input type="date" id="filterDate" onchange="displayBookings()" />
-  <input type="text" id="searchName" onkeyup="displayBookings()" placeholder="بحث باسم العميل" />
-
-  <div id="bookings"></div>
-</div>
-
-<div class="container hidden" id="calendarView">
-  <div class="calendar-controls">
-    <select id="calMonth"></select>
-    <select id="calYear"></select>
-    <button class="secondary" onclick="renderCalendar(true)">عرض</button>
+  <div class="topbar">
+    <div class="title">نظام إدارة القاعات والمطعم</div>
+    <div class="subtitle" id="topSub">صفحة رئيسية تجمع كل الأقسام (ملف واحد)</div>
   </div>
 
-  <div class="calendar-grid" id="weekdays"></div>
-  <div class="calendar-grid" id="calendarGrid"></div>
-</div>
+  <div class="app">
+    <div id="sec-home" class="section active">
+      <div class="grid">
+        <div class="card menuCard">
+          <h2>إدارة الحجوزات</h2>
+          <p>حجوزات القاعات الأربع مع تقويم شهري مرئي، بحث وفلترة، وإجمالي المتبقي.</p>
+          <button class="btn" onclick="go('bookings')">الدخول</button>
+        </div>
 
-<div class="modal" id="modal">
-  <div class="box">
-    <div class="top">
-      <div>
-        <div id="modalTitle" style="font-weight:bold">تفاصيل اليوم</div>
-        <div class="small" id="modalSub"></div>
+        <div class="card menuCard">
+          <h2>الإيرادات والمصروفات</h2>
+          <p>تسجيل المقبوضات والمدفوعات، وتجميع إيرادات المطعم والكافيه داخل نفس القسم.</p>
+          <button class="btn" onclick="go('cash')">الدخول</button>
+        </div>
+
+        <div class="card menuCard">
+          <h2>المخزون والمشتريات</h2>
+          <p>مشتريات مرتبطة بالمخزن، أرصدة أصناف، جرد فعلي ومقارنة مع المسجل وإظهار عجز/زيادة.</p>
+          <button class="btn" onclick="go('stock')">الدخول</button>
+        </div>
+
+        <div class="card menuCard">
+          <h2>شؤون الموظفين</h2>
+          <p>حضور وانصراف، ورواتب، وإضافة موظف خاص بتسجيل الحضور والانصراف فقط.</p>
+          <button class="btn" onclick="go('hr')">الدخول</button>
+        </div>
+
+        <div class="card menuCard">
+          <h2>إدارة المستخدمين</h2>
+          <p>إضافة مستخدمين (مدير، محاسب، مسؤول مشتريات، مسؤول مخزن، موظف حضور)، وتحديد الصلاحيات. ويمكن تفعيل تسجيل الدخول لاحقًا.</p>
+          <button class="btn secondary" onclick="go('users')">الدخول</button>
+        </div>
+
+        <div class="card">
+          <div class="bd">
+            <div class="hint">
+              ملاحظة: كل البيانات تُحفظ على جهازك داخل المتصفح (localStorage). لو فتحت من جهاز آخر أو مسحت بيانات المتصفح، هتختفي البيانات.
+              <div class="sep"></div>
+              نصيحة: بعد كل تعديل في GitHub، انتظر دقيقة ثم افتح رابط Vercel من جديد.
+            </div>
+          </div>
+        </div>
       </div>
-      <button class="close" onclick="closeModal()">إغلاق</button>
     </div>
-    <div id="modalBody" style="margin-top:10px;"></div>
+
+    <div id="sec-bookings" class="section">
+      <div class="card">
+        <div class="hd">
+          <h3>إدارة حجوزات القاعات</h3>
+          <div class="row">
+            <button class="btn inline secondary" onclick="go('home')">رجوع</button>
+            <button class="btn inline" onclick="openDayModal(todayISO())">فتح اليوم</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="kpi">
+            <div class="box">
+              <div class="muted">عدد الحجوزات</div>
+              <div class="num" id="kpiCount">0</div>
+            </div>
+            <div class="box">
+              <div class="muted">إجمالي قيمة الحجوزات</div>
+              <div class="num" id="kpiTotal">0</div>
+            </div>
+            <div class="box">
+              <div class="muted">إجمالي المدفوع</div>
+              <div class="num" id="kpiPaid">0</div>
+            </div>
+            <div class="box">
+              <div class="muted">إجمالي المتبقي</div>
+              <div class="num" id="kpiRemain">0</div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="calControls">
+            <div class="field">
+              <label>الشهر</label>
+              <select id="calMonth"></select>
+            </div>
+            <div class="field">
+              <label>السنة</label>
+              <select id="calYear"></select>
+            </div>
+            <div class="field">
+              <label>بحث باسم العميل</label>
+              <input id="qName" placeholder="اكتب اسم العميل..." oninput="renderBookingsTable()" />
+            </div>
+            <div class="field">
+              <label>فلترة حسب التاريخ</label>
+              <input id="qDate" type="date" onchange="renderBookingsTable()" />
+            </div>
+          </div>
+
+          <div class="calendar" id="calendar"></div>
+
+          <div class="sep"></div>
+
+          <div class="card" style="box-shadow:none; background:transparent; border:0">
+            <div class="hd" style="padding:0 0 10px; border:0">
+              <h3>سجل الحجوزات</h3>
+              <span class="badge">اضغط على أي يوم في التقويم لعرض حجوزاته</span>
+            </div>
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>الفترة</th>
+                    <th>القاعة</th>
+                    <th>العميل</th>
+                    <th>الهاتف</th>
+                    <th>الإجمالي</th>
+                    <th>المدفوع</th>
+                    <th>المتبقي</th>
+                    <th>ملاحظات</th>
+                    <th>إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="bookingsTbody"></tbody>
+              </table>
+            </div>
+            <div class="hint" id="bookingsHint"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-cash" class="section">
+      <div class="card">
+        <div class="hd">
+          <h3>الإيرادات والمصروفات (الصندوق)</h3>
+          <div class="row">
+            <button class="btn inline secondary" onclick="go('home')">رجوع</button>
+            <button class="btn inline" onclick="exportJSON()">تصدير نسخة احتياطية</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="grid">
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>إضافة حركة</h3><span class="badge">يومي + شهري + سنوي</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>التاريخ</label>
+                    <input id="cashDate" type="date" />
+                  </div>
+                  <div class="field">
+                    <label>النوع</label>
+                    <select id="cashType">
+                      <option value="in">مقبوضات (إيراد)</option>
+                      <option value="out">مدفوعات (مصروف)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>القسم</label>
+                    <select id="cashDept">
+                      <option value="restaurant_cafe">إيرادات المطعم والكافيه (قسم واحد)</option>
+                      <option value="halls">إيرادات القاعات</option>
+                      <option value="general">عام</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>القيمة</label>
+                    <input id="cashAmount" type="number" inputmode="decimal" placeholder="مثال: 1000" />
+                  </div>
+                  <div class="field">
+                    <label>الوصف</label>
+                    <input id="cashNote" placeholder="مثال: شراء مستلزمات / إيراد يومي..." />
+                  </div>
+                  <div class="row">
+                    <button class="btn ok" onclick="addCash()">حفظ</button>
+                    <button class="btn secondary" onclick="resetCashForm()">مسح</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>تقرير الصندوق</h3><span class="badge">يومي/شهري/سنوي + PDF (واجهة)</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>اختر نوع التقرير</label>
+                    <select id="cashReportType" onchange="renderCashReport()">
+                      <option value="day">يومي</option>
+                      <option value="month">شهري</option>
+                      <option value="year">سنوي</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>التاريخ (لليومي) / أي يوم في الشهر (للشهري) / أي يوم في السنة (للسنوي)</label>
+                    <input id="cashReportDate" type="date" onchange="renderCashReport()" />
+                  </div>
+                  <div class="kpi" style="margin-top:10px">
+                    <div class="box">
+                      <div class="muted">المقبوضات</div>
+                      <div class="num" id="repIn">0</div>
+                    </div>
+                    <div class="box">
+                      <div class="muted">المدفوعات</div>
+                      <div class="num" id="repOut">0</div>
+                    </div>
+                    <div class="box">
+                      <div class="muted">الصافي</div>
+                      <div class="num" id="repNet">0</div>
+                    </div>
+                    <div class="box">
+                      <div class="muted">الرصيد الحالي (تقريبي)</div>
+                      <div class="num" id="repBal">0</div>
+                    </div>
+                  </div>
+                  <div class="hint">ملاحظة PDF هنا كواجهة فقط. لو عايزه PDF فعلي هنضيف “طباعة/حفظ PDF” في مرحلة لاحقة.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="card" style="box-shadow:none">
+            <div class="hd"><h3>سجل الحركات</h3><span class="badge">حذف/بحث بسيط</span></div>
+            <div class="bd">
+              <div class="row" style="margin-bottom:10px">
+                <input id="cashSearch" placeholder="بحث في الوصف..." oninput="renderCashTable()" />
+                <button class="btn inline secondary" onclick="clearCashSearch()">مسح البحث</button>
+              </div>
+              <div class="tableWrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>النوع</th>
+                      <th>القسم</th>
+                      <th>القيمة</th>
+                      <th>الوصف</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cashTbody"></tbody>
+                </table>
+              </div>
+              <div class="hint" id="cashHint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-stock" class="section">
+      <div class="card">
+        <div class="hd">
+          <h3>المخزون والمشتريات</h3>
+          <div class="row">
+            <button class="btn inline secondary" onclick="go('home')">رجوع</button>
+            <button class="btn inline" onclick="openStockSummary()">رصيد المخزن (كل الأصناف)</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="grid">
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>إضافة صنف</h3><span class="badge">المخزون</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>اسم الصنف</label>
+                    <input id="itName" placeholder="مثال: سكر / قهوة..." />
+                  </div>
+                  <div class="field">
+                    <label>الوحدة</label>
+                    <input id="itUnit" placeholder="مثال: كجم / عبوة..." />
+                  </div>
+                  <div class="field">
+                    <label>رصيد افتتاحي</label>
+                    <input id="itQty" type="number" inputmode="decimal" placeholder="0" />
+                  </div>
+                  <div class="row">
+                    <button class="btn ok" onclick="addItem()">حفظ</button>
+                    <button class="btn secondary" onclick="resetItemForm()">مسح</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>إضافة مشتريات (تزيد المخزون)</h3><span class="badge">ربط المشتريات بالمخزن</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>التاريخ</label>
+                    <input id="purDate" type="date" />
+                  </div>
+                  <div class="field">
+                    <label>المورد</label>
+                    <input id="purSupplier" placeholder="اسم المورد" />
+                  </div>
+                  <div class="field">
+                    <label>الصنف</label>
+                    <select id="purItem"></select>
+                  </div>
+                  <div class="field">
+                    <label>الكمية</label>
+                    <input id="purQty" type="number" inputmode="decimal" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label>سعر الوحدة</label>
+                    <input id="purPrice" type="number" inputmode="decimal" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label>تم السداد؟</label>
+                    <select id="purPaid">
+                      <option value="yes">نعم</option>
+                      <option value="no">لا (على المورد)</option>
+                    </select>
+                  </div>
+                  <div class="row">
+                    <button class="btn ok" onclick="addPurchase()">حفظ</button>
+                    <button class="btn secondary" onclick="resetPurchaseForm()">مسح</button>
+                  </div>
+                  <div class="hint">عند الحفظ: الكمية تزيد تلقائيًا في رصيد الصنف، ولو غير مدفوع يتسجل رصيد على المورد.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="grid">
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>جرد فعلي</h3><span class="badge">مقارنة (عجز/زيادة)</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>تاريخ الجرد</label>
+                    <input id="invDate" type="date" />
+                  </div>
+                  <div class="field">
+                    <label>الصنف</label>
+                    <select id="invItem"></select>
+                  </div>
+                  <div class="field">
+                    <label>الكمية الفعلية</label>
+                    <input id="invActual" type="number" inputmode="decimal" placeholder="0" />
+                  </div>
+                  <div class="row">
+                    <button class="btn ok" onclick="addInventoryCheck()">حفظ</button>
+                    <button class="btn secondary" onclick="resetInvForm()">مسح</button>
+                  </div>
+                  <div class="hint">هيظهر الفرق بين المسجل والفعلي: عجز (سالب) أو زيادة (موجب).</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>أرصدة العملاء والموردين</h3><span class="badge">دفعات</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>نوع الطرف</label>
+                    <select id="partyType" onchange="renderPartySelect()">
+                      <option value="customer">عميل</option>
+                      <option value="supplier">مورد</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>الاسم</label>
+                    <select id="partyName"></select>
+                  </div>
+                  <div class="field">
+                    <label>قيمة دفعة سداد</label>
+                    <input id="partyPay" type="number" inputmode="decimal" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label>تاريخ الدفعة</label>
+                    <input id="partyPayDate" type="date" />
+                  </div>
+                  <button class="btn ok" onclick="payParty()">تسجيل دفعة</button>
+                  <div class="hint">المتبقي يمكن سداده على دفعات (حسب طلبك).</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="card" style="box-shadow:none">
+            <div class="hd"><h3>حركات المخزون والمشتريات</h3><span class="badge">عرض سريع</span></div>
+            <div class="bd">
+              <div class="tableWrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>النوع</th>
+                      <th>الصنف</th>
+                      <th>الكمية</th>
+                      <th>المورد/ملاحظات</th>
+                      <th>القيمة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockTbody"></tbody>
+                </table>
+              </div>
+              <div class="hint" id="stockHint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-hr" class="section">
+      <div class="card">
+        <div class="hd">
+          <h3>شؤون الموظفين</h3>
+          <div class="row">
+            <button class="btn inline secondary" onclick="go('home')">رجوع</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="grid">
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>إضافة موظف</h3><span class="badge">رواتب + حضور</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>اسم الموظف</label>
+                    <input id="empName" placeholder="اسم الموظف" />
+                  </div>
+                  <div class="field">
+                    <label>الوظيفة</label>
+                    <select id="empRole">
+                      <option value="manager">مدير</option>
+                      <option value="accountant">محاسب</option>
+                      <option value="buyer">مسؤول مشتريات</option>
+                      <option value="storekeeper">مسؤول مخزن</option>
+                      <option value="attendance">موظف حضور/انصراف (تسجيل فقط)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>الراتب الشهري</label>
+                    <input id="empSalary" type="number" inputmode="decimal" placeholder="0" />
+                  </div>
+                  <div class="row">
+                    <button class="btn ok" onclick="addEmployee()">حفظ</button>
+                    <button class="btn secondary" onclick="resetEmpForm()">مسح</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>تسجيل حضور/انصراف</h3><span class="badge">مواعيد</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>الموظف</label>
+                    <select id="attEmp"></select>
+                  </div>
+                  <div class="field">
+                    <label>التاريخ</label>
+                    <input id="attDate" type="date" />
+                  </div>
+                  <div class="field">
+                    <label>وقت الحضور</label>
+                    <input id="attIn" type="time" />
+                  </div>
+                  <div class="field">
+                    <label>وقت الانصراف</label>
+                    <input id="attOut" type="time" />
+                  </div>
+                  <div class="row">
+                    <button class="btn ok" onclick="addAttendance()">حفظ</button>
+                    <button class="btn secondary" onclick="resetAttForm()">مسح</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="card" style="box-shadow:none">
+            <div class="hd"><h3>سجل الحضور والانصراف</h3><span class="badge">بحث</span></div>
+            <div class="bd">
+              <div class="row" style="margin-bottom:10px">
+                <input id="attSearch" placeholder="بحث باسم الموظف..." oninput="renderAttendanceTable()" />
+                <button class="btn inline secondary" onclick="clearAttSearch()">مسح البحث</button>
+              </div>
+              <div class="tableWrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>الموظف</th>
+                      <th>وقت الحضور</th>
+                      <th>وقت الانصراف</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attTbody"></tbody>
+                </table>
+              </div>
+              <div class="hint" id="attHint"></div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="card" style="box-shadow:none">
+            <div class="hd"><h3>قائمة الموظفين</h3><span class="badge">حذف</span></div>
+            <div class="bd">
+              <div class="tableWrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>الاسم</th>
+                      <th>الوظيفة</th>
+                      <th>الراتب</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="empTbody"></tbody>
+                </table>
+              </div>
+              <div class="hint" id="empHint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-users" class="section">
+      <div class="card">
+        <div class="hd">
+          <h3>إدارة المستخدمين والصلاحيات</h3>
+          <div class="row">
+            <button class="btn inline secondary" onclick="go('home')">رجوع</button>
+            <button class="btn inline danger" onclick="resetAllData()">مسح كل البيانات</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="switchRow">
+            <div>
+              <b>تفعيل تسجيل الدخول</b>
+              <div><span>لو فعلته، أي شخص لازم يسجل دخول قبل استخدام الأقسام</span></div>
+            </div>
+            <div class="toggle" id="togAuth" onclick="toggleAuth()"></div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="grid">
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>إضافة مستخدم</h3><span class="badge">حساب جديد</span></div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label>اسم المستخدم</label>
+                    <input id="uName" placeholder="مثال: accountant1" class="mono" />
+                  </div>
+                  <div class="field">
+                    <label>كلمة المرور</label>
+                    <input id="uPass" placeholder="********" class="mono" />
+                  </div>
+                  <div class="field">
+                    <label>الدور</label>
+                    <select id="uRole">
+                      <option value="manager">مدير</option>
+                      <option value="accountant">محاسب (صلاحيات شبه المدير)</option>
+                      <option value="buyer">مسؤول مشتريات</option>
+                      <option value="storekeeper">مسؤول مخزن</option>
+                      <option value="attendance">موظف حضور/انصراف (تسجيل فقط)</option>
+                    </select>
+                  </div>
+                  <button class="btn ok" onclick="addUser()">حفظ المستخدم</button>
+                  <div class="hint">مبدئياً المحاسب = صلاحيات شاملة مثل المدير (حسب طلبك).</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none">
+              <div class="hd"><h3>قائمة المستخدمين</h3><span class="badge">حذف/تسجيل خروج</span></div>
+              <div class="bd">
+                <div class="row" style="margin-bottom:10px">
+                  <button class="btn inline secondary" onclick="openLoginModal()">تسجيل دخول</button>
+                  <button class="btn inline secondary" onclick="logout()">تسجيل خروج</button>
+                </div>
+                <div class="tableWrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>المستخدم</th>
+                        <th>الدور</th>
+                        <th>إجراء</th>
+                      </tr>
+                    </thead>
+                    <tbody id="usersTbody"></tbody>
+                  </table>
+                </div>
+                <div class="hint" id="usersHint"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="card" style="box-shadow:none">
+            <div class="hd"><h3>نسخ احتياطي</h3><span class="badge">تصدير/استيراد</span></div>
+            <div class="bd">
+              <div class="row">
+                <button class="btn" onclick="exportJSON()">تصدير JSON</button>
+                <button class="btn secondary" onclick="openImportModal()">استيراد JSON</button>
+              </div>
+              <div class="hint">لو حصلت مشكلة في المتصفح، تقدر تعمل تصدير وتحتفظ بالملف كنص.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<script>
-const HALLS = ["قاعة كابيتال","قاعة برادايس","قاعة سكاي","قاعة الماسة"];
-let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
-let editIndex = null;
+  <div class="modalBack" id="modalBack">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="hd">
+        <h3 id="modalTitle">تفاصيل</h3>
+        <button class="xbtn" onclick="closeModal()">إغلاق</button>
+      </div>
+      <div class="bd" id="modalBody"></div>
+    </div>
+  </div>
 
-function showList(){
-  document.getElementById("listView").classList.remove("hidden");
-  document.getElementById("calendarView").classList.add("hidden");
-}
+  <div class="toast" id="toast">
+    <div class="box">
+      <div>
+        <div class="msg" id="toastMsg">...</div>
+        <div class="small" id="toastSmall"></div>
+      </div>
+      <button class="xbtn" onclick="hideToast()">حسناً</button>
+    </div>
+  </div>
 
-function showCalendar(){
-  document.getElementById("calendarView").classList.remove("hidden");
-  document.getElementById("listView").classList.add("hidden");
-  renderCalendar(true);
-}
+  <script>
+    // ====== تخزين ======
+    const STORE_KEY = "nadersys_v1";
+    const defaultData = () => ({
+      authEnabled: false,
+      session: { user: null }, // {username, role}
+      users: [
+        { username:"admin", password:"admin", role:"manager" }
+      ],
+      halls: [
+        "قاعة كابيتال",
+        "قاعة برادايس",
+        "قاعة Sky",
+        "قاعة الماسا"
+      ],
+      bookings: [],
+      cash: [],
+      items: [],
+      stockMoves: [],
+      purchases: [],
+      inventoryChecks: [],
+      suppliers: {},   // {name: balance}
+      customers: {},   // {name: balance}
+      employees: [],
+      attendance: []
+    });
 
-function addBooking(){
-  const hall = document.getElementById("hall").value;
-  const date = document.getElementById("date").value;
-  const period = document.getElementById("period").value;
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const total = Number(document.getElementById("total").value);
-  const paid = Number(document.getElementById("paid").value);
-  const remaining = total - paid;
+    let DB = loadDB();
 
-  if(!hall || !date || !
+    function loadDB(){
+      try{
+        const raw = localStorage.getItem(STORE_KEY);
+        if(!raw) return defaultData();
+        const parsed = JSON.parse(raw);
+        return Object.assign(defaultData(), parsed);
+      }catch(e){
+        return defaultData();
+      }
+    }
+    function saveDB(){ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
+
+    // ====== مساعدات عامة ======
+    function fmt(n){
+      const x = Number(n||0);
+      return x.toLocaleString("ar-EG");
+    }
+    function todayISO(){
+      const d = new Date();
+      const z = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+      return z.toISOString().slice(0,10);
+    }
+    function uid(){
+      return "id_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+    function toast(msg, small=""){
+      document.getElementById("toastMsg").textContent = msg;
+      document.getElementById("toastSmall").textContent = small;
+      document.getElementById("toast").classList.add("show");
+      setTimeout(()=>hideToast(), 4000);
+    }
+    function hideToast(){ document.getElementById("toast").classList.remove("show"); }
+
+    function go(where){
+      const map = {
+        home: "sec-home",
+        bookings: "sec-bookings",
+        cash: "sec-cash",
+        stock: "sec-stock",
+        hr: "sec-hr",
+        users: "sec-users",
+      };
+      Object.values(map).forEach(id=>document.getElementById(id).classList.remove("active"));
+      document.getElementById(map[where] || "sec-home").classList.add("active");
+      refreshAll();
+    }
+
+    function roleName(role){
+      return ({
+        manager:"مدير",
+        accountant:"محاسب",
+        buyer:"مسؤول مشتريات",
+        storekeeper:"مسؤول مخزن",
+        attendance:"موظف حضور/انصراف"
+      })[role] || role;
+    }
+
+    function can(section){
+      // لو تسجيل الدخول غير مفعل: السماح للجميع
+      if(!DB.authEnabled) return true;
+      const u = DB.session.user;
+      if(!u) return false;
+
+      // صلاحيات
+      const role = u.role;
+      if(role === "manager" || role === "accountant") return true;
+
+      if(section === "bookings") return false; // حالياً الحجوزات للمدير/المحاسب فقط
+      if(section === "cash") return role === "buyer" ? false : false; // للمدير/المحاسب فقط
+      if(section === "stock") return (role === "buyer" || role === "storekeeper");
+      if(section === "hr") return role === "attendance"; // تسجيل فقط
+      if(section === "users") return role === "manager";
+      return false;
+    }
+
+    // اعتراض الدخول للأقسام عند تفعيل auth
+    const _go = go;
+    go = function(where){
+      if(where==="home"){ _go("home"); return; }
+      if(DB.authEnabled && !DB.session.user){
+        openLoginModal(() => _go(where));
+        return;
+      }
+      if(!can(where)){
+        toast("ليس لديك صلاحية دخول هذا القسم", "غيّر الصلاحيات من إدارة المستخدمين");
+        return;
+      }
+      _go(where);
+    }
+
+    // ====== مودال عام ======
+    function openModal(title, html){
+      document.getElementById("modalTitle").textContent = title;
+      document.getElementById("modalBody").innerHTML = html;
+      document.getElementById("modalBack").classList.add("show");
+    }
+    function closeModal(){
+      document.getElementById("modalBack").classList.remove("show");
+      document.getElementById("modalBody").innerHTML = "";
+    }
+
+    // ====== تهيئة ======
+    function init(){
+      // افتراضات تواريخ
+      const t = todayISO();
+      ["cashDate","cashReportDate","purDate","invDate","partyPayDate","attDate"].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = t;
+      });
+
+      // قوائم التقويم
+      const mSel = document.getElementById("calMonth");
+      const months = ["يناير","فبراير","مارس","إبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+      months.forEach((name,i)=>{
+        const o=document.createElement("option");
+        o.value=String(i+1).padStart(2,"0");
+        o.textContent=name;
+        mSel.appendChild(o);
+      });
+      const ySel = document.getElementById("calYear");
+      const now = new Date();
+      const y = now.getFullYear();
+      for(let yy=y-2; yy<=y+5; yy++){
+        const o=document.createElement("option");
+        o.value=String(yy);
+        o.textContent=String(yy);
+        ySel.appendChild(o);
+      }
+      mSel.value = String(now.getMonth()+1).padStart(2,"0");
+      ySel.value = String(y);
+      mSel.addEventListener("change", renderCalendar);
+      ySel.addEventListener("change", renderCalendar);
+
+      // auth toggle state
+      syncAuthToggle();
+
+      refreshAll();
+    }
+
+    function refreshAll(){
+      // تحديث قوائم الأصناف والموظفين والأطراف
+      renderCalendar();
+      renderBookingsTable();
+      renderCashReport();
+      renderCashTable();
+      renderItemsSelects();
+      renderStockTable();
+      renderEmployees();
+      renderAttendanceTable();
+      renderUsersTable();
+      updateKPIs();
+    }
+
+    // ====== الحجوزات + التقويم ======
+    function bookingRemain(b){
+      return Number(b.total||0) - Number(b.paid||0);
+    }
+
+    function updateKPIs(){
+      const arr = DB.bookings || [];
+      const total = arr.reduce((s,b)=>s+Number(b.total||0),0);
+      const paid = arr.reduce((s,b)=>s+Number(b.paid||0),0);
+      const rem = total - paid;
+      document.getElementById("kpiCount").textContent = fmt(arr.length);
+      document.getElementById("kpiTotal").textContent = fmt(total);
+      document.getElementById("kpiPaid").textContent = fmt(paid);
+      document.getElementById("kpiRemain").textContent = fmt(rem);
+    }
+
+    function monthDays(year, month){
+      return new Date(year, month, 0).getDate();
+    }
+
+    function renderCalendar(){
+      const month = Number(document.getElementById("calMonth")?.value || "01");
+      const year  = Number(document.getElementById("calYear")?.value || new Date().getFullYear());
+      const cal = document.getElementById("calendar");
+      if(!cal) return;
+
+      const first = new Date(year, month-1, 1);
+      const startDay = (first.getDay()+1)%7; // جعل السبت=0 تقريباً (تقريب مناسب)
+      const daysInMonth = monthDays(year, month);
+
+      const headerNames = ["السبت","الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة"];
+      let html = `<div class="calHeader">${headerNames.map(d=>`<div>${d}</div>`).join("")}</div><div class="calGrid">`;
+
+      const blanks = startDay; // عدد خلايا فاضية قبل أول يوم
+      for(let i=0;i<blanks;i++){
+        html += `<div class="day empty"></div>`;
+      }
+
+      for(let d=1; d<=daysInMonth; d++){
+        const iso = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        const dayBookings = DB.bookings.filter(b=>b.date===iso);
+
+        // تلوين اليوم: لو كل القاعات محجوزة في نفس اليوم (أي فترة) -> booked
+        // لو في حجوزات لكن مش كل القاعات -> partial
+        const hallsBooked = new Set(dayBookings.map(b=>b.hall));
+        let cls = "";
+        if(dayBookings.length){
+          if(hallsBooked.size >= DB.halls.length) cls = "booked";
+          else cls = "partial";
+        }
+
+        // مربعات القاعات (نقاط): لكل قاعة، لو عليها حجز صباحي/مسائي/كلاهما
+        const dots = DB.halls.map(h=>{
+          const b = dayBookings.filter(x=>x.hall===h);
+          const hasAM = b.some(x=>x.slot==="صباحية");
+          const hasPM = b.some(x=>x.slot==="مسائية");
+          let code = "";
+          if(hasAM && hasPM) code = "g";      // كلاهما
+          else if(hasAM || hasPM) code = "b"; // محجوز
+          else code = "";
+          return `<span class="dot ${code}" title="${h}"></span>`;
+        }).join("");
+
+        html += `
+          <div class="day ${cls}" onclick="openDayModal('${iso}')">
+            <div class="dnum">${d}</div>
+            <div class="mini">${dots}</div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+      cal.innerHTML = html;
+    }
+
+    function openDayModal(iso){
+      const hallsOptions = DB.halls.map(h=>`<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join("");
+      const slotOptions = `<option value="صباحية">صباحية</option><option value="مسائية">مسائية</option>`;
+
+      const list = dayBookingsHTML(iso);
+
+      const html = `
+        <div class="grid">
+          <div class="card" style="box-shadow:none">
+            <div class="hd"><h3>إضافة/تعديل حجز</h3><span class="badge">${iso}</span></div>
+            <div class="bd">
+              <div class="form">
+                <div class="field">
+                  <label>القاعة</label>
+                  <select id="bkHall">${hallsOptions}</select>
+                </div>
+                <div class="field">
+                  <label>الفترة</label>
+                  <select id="bkSlot">${slotOptions}</select>
+                </div>
+                <div class="field">
+                  <label>اسم العميل</label>
+                  <input id="bkName" placeholder="اسم العميل" />
+                </div>
+                <div class="field">
+                  <label>رقم الهاتف</label>
+                  <input id="bkPhone" inputmode="tel" placeholder="01xxxxxxxxx" />
+                </div>
+                <div class="field">
+                  <label>قيمة الحجز (الإجمالي)</label>
+                  <input id="bkTotal" type="number" inputmode="decimal" placeholder="0" />
+                </div>
+                <div class="field">
+                  <label>المدفوع</label>
+                  <input id="bkPaid" type="number" inputmode="decimal" placeholder="0" />
+                </div>
+                <div class="field">
+                  <label>ملاحظات</label>
+                  <input id="bkNote" placeholder="اختياري" />
+                </div>
+                <input type="hidden" id="bkId" value="" />
+                <div class="row">
+                  <button class="btn ok" onclick="saveBooking('${iso}')">حفظ</button>
+                  <button class="btn secondary" onclick="clearBookingForm()">مسح</button>
+                </div>
+                <div class="hint">المتبقي = الإجمالي - المدفوع، ويمكن سداد المتبقي على دفعات لاحقًا عبر تعديل الحجز.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="box-shadow:none">
+            <div class="hd"><h3>حجوزات هذا اليوم</h3><span class="badge">اضغط تعديل لملء النموذج</span></div>
+            <div class="bd">
+              ${list}
+            </div>
+          </div>
+        </div>
+      `;
+      openModal("تفاصيل اليوم", html);
+    }
+
+    function dayBookingsHTML(iso){
+      const rows = DB.bookings
+        .filter(b=>b.date===iso)
+        .sort((a,b)=> (a.hall+a.slot).localeCompare(b.hall+b.slot, "ar"))
+        .map(b=>{
+          const rem = bookingRemain(b);
+          const pill = rem<=0 ? `<span class="pill ok">مدفوع</span>` : `<span class="pill warn">متبقي ${fmt(rem)}</span>`;
+          return `
+            <div class="card" style="box-shadow:none; margin-bottom:10px">
+              <div class="bd">
+                <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap">
+                  <div>
+                    <div><b>${escapeHtml(b.hall)}</b> <span class="pill">${escapeHtml(b.slot)}</span></div>
+                    <div class="small">العميل: ${escapeHtml(b.name||"-")} | الهاتف: ${escapeHtml(b.phone||"-")}</div>
+                    <div class="small">الإجمالي: ${fmt(b.total)} | المدفوع: ${fmt(b.paid)} | ${pill}</div>
+                    <div class="small">ملاحظات: ${escapeHtml(b.note||"-")}</div>
+                  </div>
+                  <div class="row" style="min-width:220px">
+                    <button class="btn inline warn" onclick="editBooking('${b.id}')">تعديل</button>
+                    <button class="btn inline danger" onclick="deleteBooking('${b.id}')">حذف</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+      if(!rows) return `<div class="hint">لا توجد حجوزات في هذا اليوم.</div>`;
+      return rows;
+    }
+
+    function clearBookingForm(){
+      const ids=["bkId","bkName","bkPhone","bkTotal","bkPaid","bkNote"];
+      ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+      const hall=document.getElementById("bkHall"); if(hall) hall.selectedIndex=0;
+      const slot=document.getElementById("bkSlot"); if(slot) slot.selectedIndex=0;
+    }
+
+    function saveBooking(dateISO){
+      const hall = document.getElementById("bkHall")?.value;
+      const slot = document.getElementById("bkSlot")?.value;
+      const name = document.getElementById("bkName")?.value?.trim();
+      const phone= document.getElementById("bkPhone")?.value?.trim();
+      const total= Number(document.getElementById("bkTotal")?.value || 0);
+      const paid = Number(document.getElementById("bkPaid")?.value || 0);
+      const note = document.getElementById("bkNote")?.value?.trim();
+      const idEl = document.getElementById("bkId");
+      const id = idEl?.value;
+
+      if(!hall || !slot || !name || !phone || !total){
+        toast("يرجى إدخال جميع البيانات الأساسية", "القاعة + الفترة + اسم العميل + الهاتف + قيمة الحجز");
+        return;
+      }
+
+      // منع التكرار: نفس القاعة ونفس التاريخ ونفس الفترة
+      const conflict = DB.bookings.find(b=> b.date===dateISO && b.hall===hall && b.slot===slot && b.id!==id);
+      if(conflict){
+        toast("هذا الموعد محجوز بالفعل", `${hall} - ${dateISO} - ${slot}`);
+        return;
+      }
+
+      if(id){
+        const b = DB.bookings.find(x=>x.id===id);
+        if(!b){ toast("لم يتم العثور على الحجز للتعديل"); return; }
+        b.hall=hall; b.slot=slot; b.name=name; b.phone=phone; b.total=total; b.paid=paid; b.note=note||"";
+      }else{
+        const b = { id: uid(), date: dateISO, hall, slot, name, phone, total, paid, note: note||"" };
+        DB.bookings.push(b);
+      }
+
+      // تحديث رصيد العميل (المتبقي)
+      const remain = total - paid;
+      DB.customers[name] = (DB.customers[name]||0);
+      // نعيد حساب رصيد العميل من كل حجوزاته
+      DB.customers[name] = calcCustomerBalance(name);
+
+      saveDB();
+      toast("تم حفظ الحجز بنجاح");
+      document.getElementById("bkId").value="";
+      renderCalendar();
+      updateKPIs();
+      renderBookingsTable();
+      openDayModal(dateISO);
+    }
+
+    function calcCustomerBalance(customerName){
+      return DB.bookings
+        .filter(b=>b.name===customerName)
+        .reduce((s,b)=>s+(Number(b.total||0)-Number(b.paid||0)),0);
+    }
+
+    function editBooking(id){
+      const b = DB.bookings.find(x=>x.id===id);
+      if(!b) return;
+      document.getElementById("bkId").value = b.id;
+      document.getElementById("bkHall").value = b.hall;
+      document.getElementById("bkSlot").value = b.slot;
+      document.getElementById("bkName").value = b.name;
+      document.getElementById("bkPhone").value = b.phone;
+      document.getElementById("bkTotal").value = b.total;
+      document.getElementById("bkPaid").value = b.paid;
+      document.getElementById("bkNote").value = b.note||"";
+      toast("تم تحميل الحجز للتعديل", "عدّل البيانات ثم اضغط حفظ");
+    }
+
+    function deleteBooking(id){
+      const b = DB.bookings.find(x=>x.id===id);
+      if(!b) return;
+      if(!confirm("تأكيد حذف الحجز؟")) return;
+      DB.bookings = DB.bookings.filter(x=>x.id!==id);
+      DB.customers[b.name] = calcCustomerBalance(b.name);
+      saveDB();
+      toast("تم حذف الحجز");
+      renderCalendar();
+      updateKPIs();
+      renderBookingsTable();
+      closeModal();
+    }
+
+    function renderBookingsTable(){
+      const tb = document.getElementById("bookingsTbody");
+      if(!tb) return;
+      const qName = (document.getElementById("qName")?.value||"").trim();
+      const qDate = (document.getElementById("qDate")?.value||"").trim();
+
+      let arr = [...DB.bookings].sort((a,b)=> (b.date+a.hall+a.slot).localeCompare(a.date+b.hall+b.slot,"ar"));
+
+      if(qName){
+        arr = arr.filter(b => (b.name||"").includes(qName));
+      }
+      if(qDate){
+        arr = arr.filter(b => b.date === qDate);
+      }
+
+      const rows = arr.map(b=>{
+        const rem = bookingRemain(b);
+        const pill = rem<=0 ? `<span class="pill ok">مدفوع</span>` : `<span class="pill warn">${fmt(rem)}</span>`;
+        return `
+          <tr>
+            <td class="mono">${escapeHtml(b.date)}</td>
+            <td>${escapeHtml(b.slot)}</td>
+            <td>${escapeHtml(b.hall)}</td>
+            <td>${escapeHtml(b.name)}</td>
+            <td class="mono">${escapeHtml(b.phone)}</td>
+            <td>${fmt(b.total)}</td>
+            <td>${fmt(b.paid)}</td>
+            <td>${pill}</td>
+            <td>${escapeHtml(b.note||"-")}</td>
+            <td>
+              <div class="row">
+                <button class="btn inline warn" onclick="openDayModal('${b.date}'); setTimeout(()=>editBooking('${b.id}'),50)">تعديل</button>
+                <button class="btn inline danger" onclick="deleteBooking('${b.id}')">حذف</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      tb.innerHTML = rows || `<tr><td colspan="10" class="muted">لا توجد بيانات مطابقة.</td></tr>`;
+      document.getElementById("bookingsHint").textContent = `المعروض: ${arr.length} حجز`;
+    }
+
+    // ====== هروب HTML ======
+    function escapeHtml(s){
+      return String(s??"").replace(/[&<>"']/g, m => ({
+        "&":"&","<":"<",">":">",'"':""","'":"'"
+      })[m]);
+    }
+
+    // ====== الصندوق ======
+    function addCash(){
+      const date = document.getElementById("cashDate").value || todayISO();
+      const type = document.getElementById("cashType").value;
+      const dept = document.getElementById("cashDept").value;
+      const amount = Number(document.getElementById("cashAmount").value || 0);
+      const note = (document.getElementById("cashNote").value||"").trim();
+
+      if(!date || !amount || amount<=0){
+        toast("أدخل التاريخ والقيمة بشكل صحيح");
+        return;
+      }
+      DB.cash.push({ id: uid(), date, type, dept, amount, note });
+      saveDB();
+      toast("تم حفظ الحركة");
+      resetCashForm();
+      renderCashReport();
+      renderCashTable();
+    }
+    function resetCashForm(){
+      document.getElementById("cashAmount").value="";
+      document.getElementById("cashNote").value="";
+      document.getElementById("cashType").value="in";
+      document.getElementById("cashDept").value="restaurant_cafe";
+      document.getElementById("cashDate").value=todayISO();
+    }
+
+    function clearCashSearch(){ document.getElementById("cashSearch").value=""; renderCashTable(); }
+
+    function cashTypeName(t){ return t==="in" ? "مقبوضات" : "مدفوعات"; }
+    function cashDeptName(d){
+      return ({
+        restaurant_cafe:"إيرادات المطعم والكافيه",
+        halls:"إيرادات القاعات",
+        general:"عام"
+      })[d] || d;
+    }
+
+    function renderCashReport(){
+      const type = document.getElementById("cashReportType")?.value || "day";
+      const date = document.getElementById("cashReportDate")?.value || todayISO();
+      const dt = new Date(date+"T00:00:00");
+
+      const arr = DB.cash || [];
+      let filterFn = ()=>true;
+
+      if(type==="day"){
+        filterFn = (x)=> x.date===date;
+      }else if(type==="month"){
+        const ym = date.slice(0,7);
+        filterFn = (x)=> x.date.slice(0,7)===ym;
+      }else{
+        const y = String(dt.getFullYear());
+        filterFn = (x)=> x.date.slice(0,4)===y;
+      }
+
+      const subset = arr.filter(filterFn);
+      const sumIn = subset.filter(x=>x.type==="in").reduce((s,x)=>s+Number(x.amount||0),0);
+      const sumOut= subset.filter(x=>x.type==="out").reduce((s,x)=>s+Number(x.amount||0),0);
+      const net = sumIn - sumOut;
+
+      // رصيد تقريبي = كل المقبوضات - كل المدفوعات
+      const allIn = arr.filter(x=>x.type==="in").reduce((s,x)=>s+Number(x.amount||0),0);
+      const allOut= arr.filter(x=>x.type==="out").reduce((s,x)=>s+Number(x.amount||0),0);
+      const bal = allIn - allOut;
+
+      document.getElementById("repIn").textContent = fmt(sumIn);
+      document.getElementById("repOut").textContent= fmt(sumOut);
+      document.getElementById("repNet").textContent= fmt(net);
+      document.getElementById("repBal").textContent= fmt(bal);
+    }
+
+    function renderCashTable(){
+      const tb = document.getElementById("cashTbody");
+      if(!tb) return;
+      const q = (document.getElementById("cashSearch").value||"").trim();
+      let arr = [...(DB.cash||[])].sort((a,b)=> (b.date).localeCompare(a.date));
+      if(q) arr = arr.filter(x=> (x.note||"").includes(q));
+      tb.innerHTML = arr.map(x=>`
+        <tr>
+          <td class="mono">${escapeHtml(x.date)}</td>
+          <td>${cashTypeName(x.type)}</td>
+          <td>${cashDeptName(x.dept)}</td>
+          <td>${fmt(x.amount)}</td>
+          <td>${escapeHtml(x.note||"-")}</td>
+          <td><button class="btn inline danger" onclick="delCash('${x.id}')">حذف</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="muted">لا توجد حركات.</td></tr>`;
+      document.getElementById("cashHint").textContent = `المعروض: ${arr.length} حركة`;
+    }
+    function delCash(id){
+      if(!confirm("تأكيد حذف الحركة؟")) return;
+      DB.cash = DB.cash.filter(x=>x.id!==id);
+      saveDB();
+      renderCashReport(); renderCashTable();
+      toast("تم الحذف");
+    }
+
+    // ====== المخزون ======
+    function renderItemsSelects(){
+      const sel1 = document.getElementById("purItem");
+      const sel2 = document.getElementById("invItem");
+      if(sel1){
+        sel1.innerHTML = DB.items.map(it=>`<option value="${it.id}">${escapeHtml(it.name)} (${fmt(it.qty)} ${escapeHtml(it.unit)})</option>`).join("") || `<option value="">لا يوجد أصناف</option>`;
+      }
+      if(sel2){
+        sel2.innerHTML = DB.items.map(it=>`<option value="${it.id}">${escapeHtml(it.name)} (${fmt(it.qty)} ${escapeHtml(it.unit)})</option>`).join("") || `<option value="">لا يوجد أصناف</option>`;
+      }
+      renderPartySelect();
+      renderStockTable();
+    }
+
+    function addItem(){
+      const name = (document.getElementById("itName").value||"").trim();
+      const unit = (document.getElementById("itUnit").value||"").trim() || "وحدة";
+      const qty  = Number(document.getElementById("itQty").value || 0);
+      if(!name){ toast("اكتب اسم الصنف"); return; }
+      DB.items.push({ id: uid(), name, unit, qty });
+      DB.stockMoves.push({ id: uid(), date: todayISO(), kind:"افتتاحي", itemId: DB.items.at(-1).id, qty, note:"رصيد افتتاحي", value: 0 });
+      saveDB();
+      toast("تم إضافة الصنف");
+      resetItemForm();
+      renderItemsSelects();
+    }
+    function resetItemForm(){
+      document.getElementById("itName").value="";
+      document.getElementById("itUnit").value="";
+      document.getElementById("itQty").value="";
+    }
+
+    function addPurchase(){
+      const date = document.getElementById("purDate").value || todayISO();
+      const supplier = (document.getElementById("purSupplier").value||"").trim();
+      const itemId = document.getElementById("purItem").value;
+      const qty = Number(document.getElementById("purQty").value || 0);
+      const price = Number(document.getElementById("purPrice").value || 0);
+      const paid = document.getElementById("purPaid").value; // yes/no
+      if(!supplier || !itemId || qty<=0){
+        toast("أدخل المورد والصنف والكمية");
+        return;
+      }
+      const item = DB.items.find(x=>x.id===itemId);
+      if(!item){ toast("الصنف غير موجود"); return; }
+
+      const total = qty * price;
+      item.qty = Number(item.qty||0) + qty;
+
+      DB.purchases.push({ id: uid(), date, supplier, itemId, qty, price, total, paid });
+      DB.stockMoves.push({ id: uid(), date, kind:"مشتريات", itemId, qty, note:`مورد: ${supplier}`, value: total });
+
+      if(!DB.suppliers[supplier]) DB.suppliers[supplier]=0;
+      if(paid==="no"){
+        DB.suppliers[supplier] += total; // رصيد على المورد
+      }else{
+        // لو مدفوع، نضيفها كمصروف في الصندوق (اختياري)
+        DB.cash.push({ id: uid(), date, type:"out", dept:"general", amount: total, note:`مشتريات - ${supplier} - ${item.name}` });
+      }
+
+      saveDB();
+      toast("تم حفظ المشتريات وتحديث المخزون");
+      resetPurchaseForm();
+      renderItemsSelects();
+      renderCashReport(); renderCashTable();
+      renderStockTable();
+      renderUsersTable();
+    }
+
+    function resetPurchaseForm(){
+      document.getElementById("purSupplier").value="";
+      document.getElementById("purQty").value="";
+      document.getElementById("purPrice").value="";
+      document.getElementById("purPaid").value="yes";
+      document.getElementById("purDate").value=todayISO();
+    }
+
+    function addInventoryCheck(){
+      const date = document.getElementById("invDate").value || todayISO();
+      const itemId = document.getElementById("invItem").value;
+      const actual = Number(document.getElementById("invActual").value || 0);
+      if(!itemId){ toast("اختر الصنف"); return; }
+      const item = DB.items.find(x=>x.id===itemId);
+      if(!item){ toast("الصنف غير موجود"); return; }
+      const recorded = Number(item.qty||0);
+      const diff = actual - recorded; // موجب زيادة / سالب عجز
+      DB.inventoryChecks.push({ id: uid(), date, itemId, actual, recorded, diff });
+
+      // نحدّث المخزون ليطابق الفعلي (اختيار منطقي بعد الجرد)
+      item.qty = actual;
+      DB.stockMoves.push({ id: uid(), date, kind:"جرد", itemId, qty: diff, note:`جرد فعلي. مسجل ${recorded} -> فعلي ${actual}`, value: 0 });
+
+      saveDB();
+      toast("تم حفظ الجرد", diff<0 ? `عجز: ${fmt(Math.abs(diff))}` : diff>0 ? `زيادة: ${fmt(diff)}` : "مطابق");
+      resetInvForm();
+      renderItemsSelects();
+      renderStockTable();
+    }
+
+    function resetInvForm(){
+      document.getElementById("invActual").value="";
+      document.getElementById("invDate").value=todayISO();
+    }
+
+    function renderStockTable(){
+      const tb = document.getElementById("stockTbody");
+      if(!tb) return;
+      const itemName = (id)=> DB.items.find(x=>x.id===id)?.name || "-";
+      tb.innerHTML = [...(DB.stockMoves||[])].sort((a,b)=> (b.date).localeCompare(a.date)).map(m=>`
+        <tr>
+          <td class="mono">${escapeHtml(m.date)}</td>
+          <td>${escapeHtml(m.kind)}</td>
+          <td>${escapeHtml(itemName(m.itemId))}</td>
+          <td>${fmt(m.qty)}</td>
+          <td>${escapeHtml(m.note||"-")}</td>
+          <td>${fmt(m.value||0)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="muted">لا توجد حركات.</td></tr>`;
+      document.getElementById("stockHint").textContent = `إجمالي الحركات: ${(DB.stockMoves||[]).length}`;
+    }
+
+    function openStockSummary(){
+      const rows = DB.items.map(it=>{
+        return `<tr><td>${escapeHtml(it.name)}</td><td>${escapeHtml(it.unit)}</td><td>${fmt(it.qty)}</td></tr>`;
+      }).join("") || `<tr><td colspan="3" class="muted">لا توجد أصناف.</td></tr>`;
+      openModal("رصيد المخزن - كل الأصناف", `
+        <div class="tableWrap">
+          <table>
+            <thead><tr><th>الصنف</th><th>الوحدة</th><th>الرصيد</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `);
+    }
+
+    function renderPartySelect(){
+      const type = document.getElementById("partyType")?.value || "customer";
+      const sel = document.getElementById("partyName");
+      if(!sel) return;
+
+      let names = [];
+      if(type==="customer"){
+        names = Object.keys(DB.customers||{});
+      }else{
+        names = Object.keys(DB.suppliers||{});
+      }
+      sel.innerHTML = names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("") || `<option value="">لا يوجد</option>`;
+    }
+
+    function payParty(){
+      const type = document.getElementById("partyType").value;
+      const name = document.getElementById("partyName").value;
+      const amount = Number(document.getElementById("partyPay").value||0);
+      const date = document.getElementById("partyPayDate").value || todayISO();
+      if(!name || amount<=0){ toast("اختر الاسم وأدخل قيمة الدفعة"); return; }
+
+      if(type==="customer"){
+        DB.customers[name] = Math.max(0, (DB.customers[name]||0) - amount);
+        DB.cash.push({ id: uid(), date, type:"in", dept:"general", amount, note:`سداد من العميل: ${name}` });
+      }else{
+        DB.suppliers[name] = Math.max(0, (DB.suppliers[name]||0) - amount);
+        DB.cash.push({ id: uid(), date, type:"out", dept:"general", amount, note:`سداد للمورد: ${name}` });
+      }
+      saveDB();
+      toast("تم تسجيل الدفعة");
+      document.getElementById("partyPay").value="";
+      renderCashReport(); renderCashTable();
+      renderPartySelect();
+    }
+
+    // ====== HR ======
+    function addEmployee(){
+      const name = (document.getElementById("empName").value||"").trim();
+      const role = document.getElementById("empRole").value;
+      const salary = Number(document.getElementById("empSalary").value||0);
+      if(!name){ toast("اكتب اسم الموظف"); return; }
+      DB.employees.push({ id: uid(), name, role, salary });
+      saveDB();
+      toast("تم إضافة الموظف");
+      resetEmpForm();
+      renderEmployees();
+    }
+    function resetEmpForm(){
+      document.getElementById("empName").value="";
+      document.getElementById("empRole").value="manager";
+      document.getElementById("empSalary").value="";
+    }
+    function renderEmployees(){
+      const sel = document.getElementById("attEmp");
+      if(sel){
+        sel.innerHTML = DB.employees.map(e=>`<option value="${e.id}">${escapeHtml(e.name)} (${roleName(e.role)})</option>`).join("") || `<option value="">لا يوجد موظفين</option>`;
+      }
+
+      const tb = document.getElementById("empTbody");
+      if(tb){
+        tb.innerHTML = DB.employees.map(e=>`
+          <tr>
+            <td>${escapeHtml(e.name)}</td>
+            <td>${roleName(e.role)}</td>
+            <td>${fmt(e.salary)}</td>
+            <td><button class="btn inline danger" onclick="delEmp('${e.id}')">حذف</button></td>
+          </tr>
+        `).join("") || `<tr><td colspan="4" class="muted">لا يوجد موظفين.</td></tr>`;
+        document.getElementById("empHint").textContent = `المجموع: ${DB.employees.length}`;
+      }
+    }
+    function delEmp(id){
+      if(!confirm("تأكيد حذف الموظف؟")) return;
+      DB.employees = DB.employees.filter(e=>e.id!==id);
+      DB.attendance = DB.attendance.filter(a=>a.empId!==id);
+      saveDB();
+      renderEmployees();
+      renderAttendanceTable();
+      toast("تم الحذف");
+    }
+
+    function addAttendance(){
+      const empId = document.getElementById("attEmp").value;
+      const date  = document.getElementById("attDate").value || todayISO();
+      const tIn   = document.getElementById("attIn").value;
+      const tOut  = document.getElementById("attOut").value;
+      if(!empId || !date || !tIn){ toast("اختر الموظف وأدخل وقت الحضور"); return; }
+      DB.attendance.push({ id: uid(), empId, date, in: tIn, out: tOut||"" });
+      saveDB();
+      toast("تم حفظ الحضور/الانصراف");
+      resetAttForm();
+      renderAttendanceTable();
+    }
+    function resetAttForm(){
+      document.getElementById("attDate").value=todayISO();
+      document.getElementById("attIn").value="";
+      document.getElementById("attOut").value="";
+    }
+
+    function empNameById(id){
+      return DB.employees.find(e=>e.id===id)?.name || "-";
+    }
+
+    function renderAttendanceTable(){
+      const tb = document.getElementById("attTbody");
+      if(!tb) return;
+      const q = (document.getElementById("attSearch").value||"").trim();
+      let arr = [...DB.attendance].sort((a,b)=> (b.date).localeCompare(a.date));
+      if(q) arr = arr.filter(x=> empNameById(x.empId).includes(q));
+
+      tb.innerHTML = arr.map(a=>`
+        <tr>
+          <td class="mono">${escapeHtml(a.date)}</td>
+          <td>${escapeHtml(empNameById(a.empId))}</td>
+          <td class="mono">${escapeHtml(a.in||"-")}</td>
+          <td class="mono">${escapeHtml(a.out||"-")}</td>
+          <td><button class="btn inline danger" onclick="delAtt('${a.id}')">حذف</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="muted">لا يوجد سجلات.</td></tr>`;
+      document.getElementById("attHint").textContent = `المعروض: ${arr.length}`;
+    }
+    function clearAttSearch(){ document.getElementById("attSearch").value=""; renderAttendanceTable(); }
+    function delAtt(id){
+      if(!confirm("تأكيد حذف السجل؟")) return;
+      DB.attendance = DB.attendance.filter(x=>x.id!==id);
+      saveDB();
+      renderAttendanceTable();
+      toast("تم الحذف");
+    }
+
+    // ====== المستخدمين ======
+    function syncAuthToggle(){
+      const el = document.getElementById("togAuth");
+      if(!el) return;
+      el.classList.toggle("on", !!DB.authEnabled);
+    }
+    function toggleAuth(){
+      DB.authEnabled = !DB.authEnabled;
+      if(!DB.authEnabled) DB.session.user = null;
+      saveDB();
+      syncAuthToggle();
+      toast(DB.authEnabled ? "تم تفعيل تسجيل الدخول" : "تم إلغاء تسجيل الدخول");
+    }
+
+    function addUser(){
+      const username = (document.getElementById("uName").value||"").trim();
+      const password = (document.getElementById("uPass").value||"").trim();
+      const role = document.getElementById("uRole").value;
+      if(!username || !password){ toast("أدخل اسم مستخدم وكلمة مرور"); return; }
+      if(DB.users.some(u=>u.username===username)){ toast("اسم المستخدم موجود بالفعل"); return; }
+      DB.users.push({ username, password, role });
+      saveDB();
+      toast("تم إضافة المستخدم");
+      document.getElementById("uName").value="";
+      document.getElementById("uPass").value="";
+      document.getElementById("uRole").value="manager";
+      renderUsersTable();
+    }
+
+    function renderUsersTable(){
+      const tb = document.getElementById("usersTbody");
+      if(!tb) return;
+      tb.innerHTML = DB.users.map(u=>`
+        <tr>
+          <td class="mono">${escapeHtml(u.username)}</td>
+          <td>${roleName(u.role)}</td>
+          <td><button class="btn inline danger" onclick="delUser('${escapeHtml(u.username)}')">حذف</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="3" class="muted">لا يوجد مستخدمين.</td></tr>`;
+
+      const sess = DB.session.user;
+      document.getElementById("usersHint").textContent =
+        sess ? `المستخدم الحالي: ${sess.username} (${roleName(sess.role)})` : "لا يوجد مستخدم مسجل دخول";
+      syncAuthToggle();
+    }
+
+    function delUser(username){
+      if(username==="admin"){ toast("لا يمكن حذف admin"); return; }
+      if(!confirm("تأكيد حذف المستخدم؟")) return;
+      DB.users = DB.users.filter(u=>u.username!==username);
+      if(DB.session.user?.username===username) DB.session.user=null;
+      saveDB();
+      renderUsersTable();
+      toast("تم الحذف");
+    }
+
+    function openLoginModal(afterLogin=null){
+      openModal("تسجيل الدخول", `
+        <div class="form">
+          <div class="field">
+            <label>اسم المستخدم</label>
+            <input id="liUser" class="mono" placeholder="username" />
+          </div>
+          <div class="field">
+            <label>كلمة المرور</label>
+            <input id="liPass" class="mono" placeholder="password" />
+          </div>
+          <button class="btn ok" onclick="doLogin()">دخول</button>
+          <div class="hint">مستخدم افتراضي: admin / admin</div>
+        </div>
+      `);
+      window.__afterLogin = afterLogin;
+    }
+
+    function doLogin(){
+      const u = (document.getElementById("liUser").value||"").trim();
+      const p = (document.getElementById("liPass").value||"").trim();
+      const found = DB.users.find(x=>x.username===u && x.password===p);
+      if(!found){ toast("بيانات الدخول غير صحيحة"); return; }
+      DB.session.user = { username: found.username, role: found.role };
+      saveDB();
+      toast("تم تسجيل الدخول", `${found.username} - ${roleName(found.role)}`);
+      closeModal();
+      renderUsersTable();
+      const cb = window.__afterLogin;
+      window.__afterLogin = null;
+      if(typeof cb==="function") cb();
+    }
+
+    function logout(){
+      DB.session.user = null;
+      saveDB();
+      renderUsersTable();
+      toast("تم تسجيل الخروج");
+    }
+
+    // ====== نسخ احتياطي ======
+    function exportJSON(){
+      const txt = JSON.stringify(DB, null, 2);
+      openModal("تصدير JSON (انسخ النص)", `
+        <div class="field">
+          <label>انسخ هذا النص واحتفظ به</label>
+          <textarea id="expTxt" class="mono">${escapeHtml(txt)}</textarea>
+        </div>
+        <button class="btn" onclick="copyExp()">نسخ</button>
+      `);
+    }
+    function copyExp(){
+      const el = document.getElementById("expTxt");
+      el.select();
+      document.execCommand("copy");
+      toast("تم النسخ");
+    }
+    function openImportModal(){
+      openModal("استيراد JSON", `
+        <div class="field">
+          <label>الصق JSON هنا</label>
+          <textarea id="impTxt" class="mono" placeholder="{...}"></textarea>
+        </div>
+        <button class="btn ok" onclick="doImport()">استيراد</button>
+        <div class="hint">تنبيه: الاستيراد سيستبدل البيانات الحالية.</div>
+      `);
+    }
+    function doImport(){
+      const t = document.getElementById("impTxt").value.trim();
+      try{
+        const obj = JSON.parse(t);
+        DB = Object.assign(defaultData(), obj);
+        saveDB();
+        toast("تم الاستيراد");
+        closeModal();
+        refreshAll();
+      }catch(e){
+        toast("JSON غير صالح");
+      }
+    }
+
+    function resetAllData(){
+      if(!confirm("تأكيد مسح كل البيانات؟")) return;
+      DB = defaultData();
+      saveDB();
+      toast("تم مسح البيانات");
+      refreshAll();
+    }
+
+    // ====== إطلاق ======
+    window.addEventListener("load", init);
+----- PART 1/2 END -----
