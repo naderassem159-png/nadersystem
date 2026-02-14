@@ -2054,4 +2054,120 @@
 
     // ====== إطلاق ======
     window.addEventListener("load", init);
------ PART 1/2 END -----
+----- PART 2/2 START -----
+    // ====== إصلاحات وأدوات ======
+    // عند تفعيل auth ومحاولة فتح قسم بدون صلاحية، نمنع الدخول
+    // (تم تطبيقه داخل go)
+
+    // لو المستخدم فعل تسجيل الدخول وهو مش عامل دخول، نخليه يقدر يفتح "إدارة المستخدمين" بدون تسجيل
+    // لكن باقي الأقسام تتطلب دخول
+    const __origCan = can;
+    can = function(section){
+      if(!DB.authEnabled) return true;
+      if(section==="users") return true; // دائمًا مسموح دخول إدارة المستخدمين لتفعيل/إضافة حسابات
+      return __origCan(section);
+    }
+
+    // تحديث نص الشريط العلوي حسب الحالة
+    function updateTopSub(){
+      const el = document.getElementById("topSub");
+      if(!el) return;
+      if(!DB.authEnabled){
+        el.textContent = "صفحة رئيسية تجمع كل الأقسام (بدون تسجيل دخول حالياً)";
+        return;
+      }
+      const u = DB.session.user;
+      if(!u){
+        el.textContent = "تسجيل الدخول مُفعّل (لا يوجد مستخدم مسجل حالياً)";
+      }else{
+        el.textContent = `تسجيل الدخول مُفعّل | المستخدم الحالي: ${u.username} (${roleName(u.role)})`;
+      }
+    }
+
+    // نربط updateTopSub مع refreshAll
+    const __refreshAll = refreshAll;
+    refreshAll = function(){
+      __refreshAll();
+      updateTopSub();
+    }
+
+    // تحسين حساب بداية الأسبوع للتقويم (السبت أولاً)
+    // JS: getDay() الأحد=0 ... السبت=6
+    // نريد السبت=0 => (day+1)%7
+    // تم بالفعل.
+
+    // ====== تحسين: تصحيح أرصدة العملاء والموردين عند الفتح ======
+    function rebuildParties(){
+      // العملاء: المتبقي من الحجوزات
+      const cust = {};
+      for(const b of DB.bookings){
+        const name = (b.name||"").trim();
+        if(!name) continue;
+        cust[name] = (cust[name]||0) + (Number(b.total||0) - Number(b.paid||0));
+      }
+      DB.customers = Object.assign({}, DB.customers||{}, cust);
+
+      // الموردين: من المشتريات غير المدفوعة
+      const sup = {};
+      for(const p of DB.purchases||[]){
+        if(p.paid==="no"){
+          const s = (p.supplier||"").trim();
+          if(!s) continue;
+          sup[s] = (sup[s]||0) + Number(p.total||0);
+        }
+      }
+      DB.suppliers = Object.assign({}, DB.suppliers||{}, sup);
+
+      saveDB();
+    }
+
+    const __init = init;
+    init = function(){
+      __init();
+      rebuildParties();
+      refreshAll();
+    }
+
+    // ====== زر Enter في تسجيل الدخول ======
+    document.addEventListener("keydown", (e)=>{
+      if(e.key!=="Enter") return;
+      const mb = document.getElementById("modalBack");
+      if(mb && mb.classList.contains("show")){
+        const liUser = document.getElementById("liUser");
+        const liPass = document.getElementById("liPass");
+        if(liUser && liPass){
+          // لو داخل مودال تسجيل الدخول
+          doLogin();
+        }
+      }
+    });
+
+    // ====== منع أخطاء undefined في بعض المتصفحات ======
+    if(!Array.prototype.at){
+      Array.prototype.at = function(n){
+        n = Math.trunc(n) || 0;
+        if(n<0) n += this.length;
+        if(n<0 || n>=this.length) return undefined;
+        return this[n];
+      }
+    }
+
+    // ====== إغلاق المودال عند الضغط خارج الصندوق ======
+    document.getElementById("modalBack").addEventListener("click", (e)=>{
+      if(e.target.id==="modalBack") closeModal();
+    });
+
+    // ====== تحسين: إعادة حساب KPI عند أي تغيير ======
+    const __saveDB = saveDB;
+    saveDB = function(){
+      __saveDB();
+      // لا نعمل render هنا لتفادي حلقات، لكن نحدث KPI لو في صفحة الحجوزات
+      try{ updateKPIs(); }catch(e){}
+    }
+
+    // ====== تشغيل أولي ======
+    // (load -> init تم بالفعل)
+  </script>
+</body>
+</html>
+
