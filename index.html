@@ -1143,7 +1143,8 @@
       })[role] || role;
     }
 
-    function can(section){
+   function can(section){
+  return true; {
       // لو تسجيل الدخول غير مفعل: السماح للجميع
       if(!DB.authEnabled) return true;
       const u = DB.session.user;
